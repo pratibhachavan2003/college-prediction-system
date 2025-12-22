@@ -1,0 +1,10 @@
+{
+  "git.ignoreLimitWarning": true,
+  "terminal.integrated.accessibleViewFocusOnCommandExecution": true,
+  "terminal.integrated.accessibleViewPreserveCursorPosition": true,
+  "terminal.integrated.enableImages": true,
+  "github.copilot.chat.agent.autoFix": true,
+  "chat.disableAIFeatures": false,
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
