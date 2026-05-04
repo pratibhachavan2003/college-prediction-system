@@ -13,9 +13,11 @@ public class Student {
   private String name;
   private String email;
   private String phoneNumber;
+  private String password;
   private double tenthPercentage;
   private double twelfthPercentage;
   private double jeeScore;
+  private String role; // "student" or "admin"
 
   public Student() {
   }
@@ -52,6 +54,14 @@ public class Student {
     this.phoneNumber = phoneNumber;
   }
 
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
   public double getTenthPercentage() {
     return tenthPercentage;
   }
@@ -74,5 +84,13 @@ public class Student {
 
   public void setJeeScore(double jeeScore) {
     this.jeeScore = jeeScore;
+  }
+
+  public String getRole() {
+    return role;
+  }
+
+  public void setRole(String role) {
+    this.role = role;
   }
 }

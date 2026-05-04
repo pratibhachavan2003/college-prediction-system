@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -8,7 +8,6 @@ import {
   Button,
   List,
   ListItem,
-  ListItemText,
   Avatar,
 } from '@mui/material';
 import Navbar from './Navbar';
@@ -26,61 +25,89 @@ const AICounselling = () => {
     },
   ]);
   const [input, setInput] = useState('');
+  const messagesEndRef = useRef(null);
+  const timeoutRef = useRef(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSend = () => {
     if (!input.trim()) return;
 
+    // Clear any pending timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
     const userMessage = {
-      id: messages.length + 1,
+      id: Math.random().toString(36).substr(2, 9),
       text: input,
       sender: 'user',
       timestamp: new Date(),
     };
 
-    setMessages([...messages, userMessage]);
+    const userMessageInput = input; // Store input before clearing
+    
+    // Update messages with user message
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput('');
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = generateResponse(input);
+    // Simulate AI response after delay
+    timeoutRef.current = setTimeout(() => {
+      const aiResponse = generateResponse(userMessageInput);
       const aiMessage = {
-        id: messages.length + 2,
+        id: Math.random().toString(36).substr(2, 9),
         text: aiResponse,
         sender: 'ai',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prevMsgs) => [...prevMsgs, aiMessage]);
+      timeoutRef.current = null;
     }, 1000);
   };
 
   const generateResponse = (userInput) => {
     const input = userInput.toLowerCase();
 
-    if (input.includes('cse') || input.includes('computer science')) {
-      return "Computer Science Engineering offers excellent career prospects in software development, AI, data science, and cybersecurity. Average salary starts at ₹6-8 LPA for freshers and can go up to ₹15+ LPA with experience. Top companies like Google, Microsoft, Amazon actively recruit CSE graduates.";
+    const branchKeywords = ['cse', 'computer science', 'ece', 'electrical', 'mechanical', 'mech', 'civil', 'it', 'chemical', 'branch', 'stream'];
+    const examKeywords = ['jee', 'mht cet', 'cet', 'exam', 'prepare', 'preparation', 'study', 'mock'];
+    const admissionKeywords = ['college', 'admission', 'rank', 'cutoff', 'counselling', 'seat', 'quota'];
+    const careerKeywords = ['placement', 'job', 'salary', 'package', 'career', 'scope', 'opportunity'];
+
+    const hasKeyword = (keywords) => keywords.some((keyword) => input.includes(keyword));
+
+    if (hasKeyword(branchKeywords)) {
+      return "Branch selection depends on your interests and strengths. For programming and software, CSE/IT is best. If you like machines and manufacturing, Mechanical is a strong choice. For electronics and communications, choose ECE. Share your interests and strengths for more personalized guidance.";
     }
 
-    if (input.includes('mechanical') || input.includes('mech')) {
-      return "Mechanical Engineering provides opportunities in automotive, aerospace, manufacturing, and robotics. It's a versatile field with good job stability. Starting salary is around ₹4-6 LPA, with experienced engineers earning ₹10+ LPA. Companies like Tata Motors, Mahindra, and L&T are major recruiters.";
+    if (hasKeyword(examKeywords)) {
+      return "For exam preparation, build a strong foundation with NCERT and past papers, then move to mock tests. Manage your time well, revise regularly, and focus on weak topics. If you tell me which exam or subject you are preparing for, I can suggest a study plan.";
     }
 
-    if (input.includes('jee') || input.includes('mht cet')) {
-      return "For JEE Mains, focus on NCERT books and previous year papers. Practice regularly with mock tests. For MHT-CET, study state board books along with competitive exam material. Consistent practice and time management are key to success.";
+    if (hasKeyword(admissionKeywords)) {
+      return "College selection is based on rank, branch preference, location, and budget. Look at placement records, faculty, infrastructure, and accreditation. If you share your exam score or preferred region, I can help narrow down suitable college options.";
     }
 
-    if (input.includes('college') || input.includes('admission')) {
-      return "College selection depends on your rank, preferred branch, and location preferences. Consider factors like placement record, faculty quality, infrastructure, and accreditation. Government colleges generally offer better value for money compared to private institutions.";
+    if (hasKeyword(careerKeywords)) {
+      return "Career prospects vary by branch and college. Good branches for placements include CSE, ECE, IT, and some core engineering fields. Certification, internships, and project experience improve job chances. Tell me your preferred field or salary expectations for more tailored advice.";
     }
 
-    if (input.includes('branch') || input.includes('which branch')) {
-      return "Choose a branch based on your interests and strengths. If you enjoy programming and problem-solving, go for CSE/IT. For design and manufacturing, consider Mechanical. If you like circuits and systems, ECE is a good choice. Research each branch thoroughly before deciding.";
+    if (input.includes('how') || input.includes('what') || input.includes('why') || input.includes('when') || input.includes('where') || input.includes('?')) {
+      return `That's a good question! I can help with branches, college choices, exam preparation, and career options. Please let me know more details about your situation so I can give a better response.`;
     }
 
-    if (input.includes('placement') || input.includes('job')) {
-      return "Good colleges have placement rates above 80-90%. Average packages vary by branch and college tier. Tier-1 colleges (IITs, NITs) offer ₹8-15 LPA average, while good state colleges offer ₹3-7 LPA. Higher studies or certifications can significantly boost your career prospects.";
-    }
-
-    return "I'd be happy to help you with information about engineering colleges, branches, career guidance, or admission processes. Could you please provide more specific details about what you're looking for?";
+    return `I can help with engineering college admissions, branch choices, exam preparation, career planning, and Maharashtra counselling details. Please ask your question in any way you like, and I will do my best to answer it.`;
   };
 
   const handleKeyPress = (e) => {
@@ -92,93 +119,226 @@ const AICounselling = () => {
   return (
     <>
       <Navbar />
-      <Box sx={{ bgcolor: '#f8f9fa', minHeight: 'calc(100vh - 64px)', py: 4 }}>
-        <Container maxWidth="md">
-          <Typography
-            variant="h3"
-            component="h1"
-            sx={{
-              fontWeight: 'bold',
-              textAlign: 'center',
-              mb: 4,
-              color: '#1a1a1a',
-            }}
-          >
-            AI Career Counsellor
-          </Typography>
+      <Box sx={{ 
+        bgcolor: '#f8fafc',
+        minHeight: 'calc(100vh - 64px)', 
+        py: 4,
+        position: 'relative'
+      }}>
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography
+              variant="h3"
+              component="h1"
+              sx={{
+                fontWeight: 'bold',
+                color: '#667eea',
+                mb: 2,
+              }}
+            >
+              🤖 AI Career Counsellor
+            </Typography>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: '#764ba2', 
+                mb: 1,
+              }}
+            >
+              Your Personal Guide to Engineering Careers
+            </Typography>
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                color: '#64748b',
+                maxWidth: 600,
+                mx: 'auto'
+              }}
+            >
+              Ask me anything about Maharashtra engineering colleges, branches, career paths, and admission guidance.
+            </Typography>
+          </Box>
 
+          {/* Chat Interface */}
           <Paper
-            elevation={3}
+            elevation={10}
             sx={{
               height: '70vh',
               display: 'flex',
               flexDirection: 'column',
-              borderRadius: 3,
+              borderRadius: 4,
               overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              border: '2px solid rgba(255,255,255,0.1)'
             }}
           >
-            <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2 }}>
-              <List>
-                {messages.map((message) => (
+            {/* Messages Area */}
+            <Box 
+              sx={{ 
+                flexGrow: 1, 
+                overflow: 'auto', 
+                p: 3,
+                background: 'linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%)',
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: '#f1f1f1',
+                  borderRadius: '3px'
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#667eea',
+                  borderRadius: '3px',
+                  '&:hover': {
+                    background: '#5a67d8'
+                  }
+                }
+              }}
+            >
+              <List sx={{ p: 0 }}>
+                {messages.map((message, index) => (
                   <ListItem
                     key={message.id}
                     sx={{
                       justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
-                      mb: 1,
+                      mb: 2,
+                      px: 0
                     }}
                   >
                     <Box
                       sx={{
                         display: 'flex',
                         alignItems: 'flex-start',
-                        maxWidth: '70%',
+                        maxWidth: '75%',
                         flexDirection: message.sender === 'user' ? 'row-reverse' : 'row',
+                        animation: `slideIn 0.3s ease-out ${index * 0.1}s both`
                       }}
                     >
                       <Avatar
                         sx={{
                           bgcolor: message.sender === 'ai' ? '#667eea' : '#764ba2',
-                          width: 32,
-                          height: 32,
-                          mr: message.sender === 'user' ? 0 : 1,
-                          ml: message.sender === 'user' ? 1 : 0,
+                          width: 40,
+                          height: 40,
+                          mr: message.sender === 'user' ? 0 : 2,
+                          ml: message.sender === 'user' ? 2 : 0,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          border: '2px solid rgba(255,255,255,0.2)'
                         }}
                       >
                         {message.sender === 'ai' ? <SmartToyIcon /> : <PersonIcon />}
                       </Avatar>
                       <Paper
-                        elevation={1}
+                        elevation={3}
                         sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          bgcolor: message.sender === 'user' ? '#667eea' : 'white',
-                          color: message.sender === 'user' ? 'white' : 'text.primary',
+                          p: 2.5,
+                          borderRadius: message.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                          bgcolor: message.sender === 'user' 
+                            ? '#e5e7eb' 
+                            : '#ffffff',
+                          boxShadow: message.sender === 'user' 
+                            ? '0 4px 15px rgba(102, 126, 234, 0.4)' 
+                            : '0 2px 8px rgba(0,0,0,0.1)',
+                          position: 'relative',
+                          minWidth: '60px',
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            width: 0,
+                            height: 0,
+                            border: '8px solid transparent',
+                            ...(message.sender === 'user' 
+                              ? {
+                                  right: -8,
+                                  top: 16,
+                                  borderLeftColor: '#667eea',
+                                  borderRight: 0
+                                }
+                              : {
+                                  left: -8,
+                                  top: 16,
+                                  borderRightColor: 'rgba(0,0,0,0.15)',
+                                  borderLeft: 0
+                                }
+                            )
+                          }
                         }}
                       >
-                        <ListItemText
-                          primary={message.text}
-                          primaryTypographyProps={{
-                            variant: 'body1',
-                            sx: { wordWrap: 'break-word' },
+                        <Typography
+                          variant="body1"
+                          sx={{ 
+                            wordWrap: 'break-word',
+                            lineHeight: 1.6,
+                            fontSize: '0.95rem',
+                            color: message.sender === 'user' ? '#ffffff' : '#1a1a1a',
+                            fontWeight: 500
                           }}
-                        />
+                        >
+                          {message.text}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            mt: 1,
+                            opacity: message.sender === 'user' ? 0.9 : 0.7,
+                            fontSize: '0.75rem',
+                            color: message.sender === 'user' ? 'rgba(255,255,255,0.9)' : '#666'
+                          }}
+                        >
+                          {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </Typography>
                       </Paper>
                     </Box>
                   </ListItem>
                 ))}
+                <div ref={messagesEndRef} />
               </List>
             </Box>
 
-            <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+            {/* Input Area */}
+            <Box 
+              sx={{ 
+                p: 3, 
+                borderTop: '2px solid #e0e0e0',
+                background: 'white'
+              }}
+            >
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
                 <TextField
                   fullWidth
                   placeholder="Ask me about colleges, branches, careers..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
+                  multiline
+                  maxRows={3}
                   variant="outlined"
-                  sx={{ flexGrow: 1 }}
+                  sx={{ 
+                    flexGrow: 1,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 3,
+                      backgroundColor: '#f8f9fa',
+                      border: '2px solid #e2e8f0',
+                      '&:hover': {
+                        backgroundColor: '#ffffff',
+                        borderColor: '#cbd5e1'
+                      },
+                      '&.Mui-focused': {
+                        backgroundColor: '#ffffff',
+                        borderColor: '#667eea',
+                        boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)'
+                      }
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      color: '#1a365d',
+                      fontWeight: 500,
+                      '&::placeholder': {
+                        color: '#94a3b8',
+                        opacity: 0.8
+                      }
+                    }
+                  }}
                 />
                 <Button
                   variant="contained"
@@ -186,28 +346,83 @@ const AICounselling = () => {
                   disabled={!input.trim()}
                   sx={{
                     px: 3,
+                    py: 1.5,
+                    borderRadius: 3,
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+                    transition: 'all 0.3s ease-in-out',
                     '&:hover': {
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      opacity: 0.9,
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
                     },
+                    '&:disabled': {
+                      background: '#ccc',
+                      transform: 'none',
+                      boxShadow: 'none'
+                    }
                   }}
                 >
-                  <SendIcon />
+                  <SendIcon sx={{ fontSize: 20 }} />
                 </Button>
               </Box>
+              
+              {/* Typing Indicator */}
+              {messages.length > 0 && messages[messages.length - 1].sender === 'user' && (
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, gap: 1 }}>
+                  <Avatar sx={{ width: 24, height: 24, bgcolor: '#667eea' }}>
+                    <SmartToyIcon sx={{ fontSize: 14 }} />
+                  </Avatar>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                    AI is typing...
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <Box sx={{ width: 4, height: 4, bgcolor: '#667eea', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both' }} />
+                    <Box sx={{ width: 4, height: 4, bgcolor: '#667eea', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both 0.2s' }} />
+                    <Box sx={{ width: 4, height: 4, bgcolor: '#667eea', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both 0.4s' }} />
+                  </Box>
+                </Box>
+              )}
             </Box>
           </Paper>
 
+          {/* Footer Note */}
           <Typography
             variant="body2"
-            color="text.secondary"
-            sx={{ textAlign: 'center', mt: 2 }}
+            sx={{ 
+              textAlign: 'center', 
+              mt: 3, 
+              color: '#667eea',
+              fontStyle: 'italic'
+            }}
           >
-            This AI counsellor provides general guidance. For personalized advice, consult with career counsellors or admission experts.
+            💡 This AI counsellor provides general guidance. For personalized advice, consult with career counsellors or admission experts.
           </Typography>
         </Container>
       </Box>
+
+      {/* Add CSS animations */}
+      <style jsx global>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes bounce {
+          0%, 80%, 100% {
+            transform: scale(0);
+          }
+          40% {
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </>
   );
 };

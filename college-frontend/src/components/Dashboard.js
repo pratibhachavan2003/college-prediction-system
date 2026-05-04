@@ -197,6 +197,80 @@ const Dashboard = () => {
           </Grid>
         </Container>
       </Box>
+
+      {/* CAP Round Section */}
+      <Box sx={{ bgcolor: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', py: 6, my: 6 }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Typography variant="h3" component="h2" gutterBottom sx={{ fontWeight: 'bold', color: 'white', mb: 2 }}>
+                🎯 Don't Miss CAP Round!
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'white', mb: 3, fontSize: '1.1rem' }}>
+                CAP (Centralized Admission Process) is your last chance to secure a college seat. With lower cutoffs and fewer competitors, CAP Round offers unique opportunities for admission.
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2 }}>
+                ✅ Final admission opportunity<br/>
+                ✅ Competitive cutoffs<br/>
+                ✅ Faster allotment process<br/>
+                ✅ Remaining seats available
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/cap-round')}
+                sx={{
+                  bgcolor: 'white',
+                  color: '#f093fb',
+                  fontWeight: 'bold',
+                  px: 4,
+                  py: 1.5,
+                  '&:hover': {
+                    bgcolor: '#f5f5f5',
+                  },
+                }}
+              >
+                Explore CAP Round →
+              </Button>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
+                <CardContent sx={{ bgcolor: '#fff' }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    📅 CAP Round Timeline
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mb: 2, pb: 2, borderBottom: '1px solid #eee' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#667eea' }}>
+                        Registration
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        June 10 - June 13, 2025
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mb: 2, pb: 2, borderBottom: '1px solid #eee' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#667eea' }}>
+                        Admission Process
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        June 15 - June 30, 2025
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#667eea' }}>
+                        Available Seats
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        350 seats out of 1,200 total
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
     </>
   );
 };

@@ -22,7 +22,7 @@ mvn spring-boot:run
 3. Test the prediction endpoint (example):
 
 ```powershell
-curl -X POST http://localhost:8083/api/predict -H "Content-Type: application/json" -d '{"name":"Alice","score":85,"preferredCity":"Mumbai"}'
+curl -X POST http://localhost:8084/api/predict -H "Content-Type: application/json" -d '{"name":"Alice","score":85,"preferredCity":"Mumbai"}'
 ```
 
 Notes:

@@ -4,6 +4,7 @@ public class StudentRequest {
   private String name;
   private String email;
   private String phoneNumber;
+  private String password;
   private Double tenthPercentage;
   private Double twelfthPercentage;
   private Double jeeScore; // 0-360
@@ -21,6 +22,14 @@ public class StudentRequest {
   private Double mhtCetPercentile; // 0-100
   private Double twelfthPCM; // 0-100
   private Double neetScore; // 0-720
+  // Additional fields to match frontend form content
+  private Double physicsMarks;
+  private Double chemistryMarks;
+  private Double mathematicsMarks;
+  private String domicile; // Yes/No or province
+  private Integer cetRank;
+  private String attempt; // e.g., "1st Attempt"
+  private String capRound; // e.g., "Round 1", "All Rounds"
 
   public StudentRequest() {
   }
@@ -47,6 +56,14 @@ public class StudentRequest {
 
   public void setPhoneNumber(String phoneNumber) {
     this.phoneNumber = phoneNumber;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public Double getTenthPercentage() {
@@ -167,5 +184,61 @@ public class StudentRequest {
 
   public void setNeetScore(Double neetScore) {
     this.neetScore = neetScore;
+  }
+
+  public Double getPhysicsMarks() {
+    return physicsMarks;
+  }
+
+  public void setPhysicsMarks(Double physicsMarks) {
+    this.physicsMarks = physicsMarks;
+  }
+
+  public Double getChemistryMarks() {
+    return chemistryMarks;
+  }
+
+  public void setChemistryMarks(Double chemistryMarks) {
+    this.chemistryMarks = chemistryMarks;
+  }
+
+  public Double getMathematicsMarks() {
+    return mathematicsMarks;
+  }
+
+  public void setMathematicsMarks(Double mathematicsMarks) {
+    this.mathematicsMarks = mathematicsMarks;
+  }
+
+  public String getDomicile() {
+    return domicile;
+  }
+
+  public void setDomicile(String domicile) {
+    this.domicile = domicile;
+  }
+
+  public Integer getCetRank() {
+    return cetRank;
+  }
+
+  public void setCetRank(Integer cetRank) {
+    this.cetRank = cetRank;
+  }
+
+  public String getAttempt() {
+    return attempt;
+  }
+
+  public void setAttempt(String attempt) {
+    this.attempt = attempt;
+  }
+
+  public String getCapRound() {
+    return capRound;
+  }
+
+  public void setCapRound(String capRound) {
+    this.capRound = capRound;
   }
 }

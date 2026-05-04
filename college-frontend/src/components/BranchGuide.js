@@ -7,25 +7,37 @@ import {
   Grid,
   Card,
   CardContent,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  CardActions,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Chip,
+  LinearProgress,
+  Rating,
 } from '@mui/material';
 import Navbar from './Navbar';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import ComputerIcon from '@mui/icons-material/Computer';
 import BuildIcon from '@mui/icons-material/Build';
 import ScienceIcon from '@mui/icons-material/Science';
 import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
-import BiotechIcon from '@mui/icons-material/Biotech';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import WorkIcon from '@mui/icons-material/Work';
+import StarIcon from '@mui/icons-material/Star';
 
 const BranchGuide = () => {
-  const [expanded, setExpanded] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
 
-  const handleChange = (panel) => (event, isExpanded) => {
-    setExpanded(isExpanded ? panel : false);
+  const handleOpenDialog = (branch) => {
+    setSelectedBranch(branch);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
   };
 
   const branches = [
@@ -33,173 +45,574 @@ const BranchGuide = () => {
       name: 'Computer Science Engineering (CSE)',
       icon: ComputerIcon,
       color: '#667eea',
-      description: 'Focuses on software development, algorithms, data structures, and computer systems.',
-      career: 'Software Engineer, Data Scientist, System Analyst',
+      lightColor: '#667eea20',
+      description: 'Software development and digital innovation',
       salary: '₹6-15 LPA',
-      future: 'High demand in AI, ML, cybersecurity, and software development.',
-    },
-    {
-      name: 'Information Technology (IT)',
-      icon: ComputerIcon,
-      color: '#764ba2',
-      description: 'Covers networking, databases, web development, and information systems.',
-      career: 'IT Consultant, Network Administrator, Web Developer',
-      salary: '₹5-12 LPA',
-      future: 'Growing in cloud computing, IoT, and digital transformation.',
+      demand: 95,
+      rating: 5,
+      careers: ['Software Engineer', 'Data Scientist', 'Full Stack Developer', 'AI/ML Engineer'],
+      skills: ['Programming', 'Database Design', 'Web Development', 'Problem Solving'],
+      future: 'High demand in AI, ML, cybersecurity, and software development. Fastest growing field with highest salaries.',
+      overview: 'CSE focuses on software development, algorithms, data structures, artificial intelligence, and computer systems. It is the most sought-after branch with excellent growth prospects.',
     },
     {
       name: 'Mechanical Engineering',
       icon: BuildIcon,
       color: '#f093fb',
-      description: 'Deals with design, manufacturing, and maintenance of mechanical systems.',
-      career: 'Mechanical Engineer, Design Engineer, Project Manager',
+      lightColor: '#f09fb20',
+      description: 'Design and manufacturing systems',
       salary: '₹4-10 LPA',
-      future: 'Essential in automotive, aerospace, and manufacturing industries.',
+      demand: 75,
+      rating: 4,
+      careers: ['Mechanical Engineer', 'Design Engineer', 'Manufacturing Engineer', 'Project Manager'],
+      skills: ['CAD Design', 'Thermodynamics', '3D Modeling', 'Manufacturing'],
+      future: 'Essential in automotive, aerospace, and manufacturing industries with steady growth.',
+      overview: 'Mechanical Engineering deals with design, manufacturing, and maintenance of mechanical systems. It provides diverse opportunities in various industrial sectors.',
     },
     {
       name: 'Civil Engineering',
       icon: EngineeringIcon,
       color: '#4facfe',
-      description: 'Involves construction, infrastructure, and environmental engineering.',
-      career: 'Civil Engineer, Structural Engineer, Project Manager',
+      lightColor: '#4facfe20',
+      description: 'Infrastructure and construction',
       salary: '₹4-9 LPA',
-      future: 'Critical for infrastructure development and smart cities.',
+      demand: 70,
+      rating: 4,
+      careers: ['Civil Engineer', 'Structural Engineer', 'Project Manager', 'Construction Manager'],
+      skills: ['Structural Design', 'Project Management', 'CAD', 'Construction Techniques'],
+      future: 'Critical for infrastructure development, smart cities, and sustainable construction.',
+      overview: 'Civil Engineering involves construction, infrastructure planning, and environmental engineering. It plays a vital role in nation building and urban development.',
     },
     {
       name: 'Electrical Engineering',
       icon: ElectricBoltIcon,
-      color: '#00f2fe',
-      description: 'Covers power systems, electronics, and electrical machines.',
-      career: 'Electrical Engineer, Power Engineer, Control Systems Engineer',
+      color: '#FF8C42',
+      lightColor: '#FF8C4220',
+      description: 'Power systems and electronics',
       salary: '₹4-11 LPA',
-      future: 'Key in renewable energy, automation, and electronics.',
-    },
-    {
-      name: 'Electronics & Communication Engineering (ECE)',
-      icon: ElectricBoltIcon,
-      color: '#43e97b',
-      description: 'Focuses on electronic devices, communication systems, and signal processing.',
-      career: 'Electronics Engineer, Communication Engineer, Embedded Systems Engineer',
-      salary: '₹4-12 LPA',
-      future: 'Growing in telecommunications, IoT, and semiconductor industry.',
+      demand: 80,
+      rating: 4,
+      careers: ['Electrical Engineer', 'Power Systems Engineer', 'Controls Engineer', 'IoT Developer'],
+      skills: ['Circuit Design', 'Power Systems', 'Automation', 'IoT'],
+      future: 'Key in renewable energy, automation, and electronics with growing renewable energy sector.',
+      overview: 'Electrical Engineering covers power systems, electronics, and electrical machines. It is crucial for energy production and automation industry.',
     },
     {
       name: 'Chemical Engineering',
       icon: ScienceIcon,
-      color: '#38f9d7',
-      description: 'Involves chemical processes, materials, and industrial chemistry.',
-      career: 'Chemical Engineer, Process Engineer, R&D Scientist',
+      color: '#9B59B6',
+      lightColor: '#9B59B620',
+      description: 'Chemical processes and materials',
       salary: '₹5-10 LPA',
-      future: 'Important in pharmaceuticals, petrochemicals, and materials science.',
-    },
-    {
-      name: 'Biotechnology',
-      icon: BiotechIcon,
-      color: '#fa709a',
-      description: 'Combines biology and technology for medical and industrial applications.',
-      career: 'Biotechnologist, Research Scientist, Pharma Engineer',
-      salary: '₹4-8 LPA',
-      future: 'Expanding in healthcare, agriculture, and bioengineering.',
-    },
-    {
-      name: 'Aerospace Engineering',
-      icon: EngineeringIcon,
-      color: '#a8edea',
-      description: 'Deals with aircraft, spacecraft, and atmospheric systems.',
-      career: 'Aerospace Engineer, Aviation Engineer, Defense Engineer',
-      salary: '₹6-14 LPA',
-      future: 'Growing in space technology and defense sectors.',
+      demand: 72,
+      rating: 4,
+      careers: ['Chemical Engineer', 'Process Engineer', 'R&D Scientist', 'Quality Engineer'],
+      skills: ['Process Design', 'Thermodynamics', 'Safety', 'Research'],
+      future: 'Important in pharmaceuticals, petrochemicals, and materials science with good growth.',
+      overview: 'Chemical Engineering involves chemical processes, materials, and industrial chemistry. Significant opportunities in pharma, petroleum, and energy sectors.',
     },
   ];
 
   return (
     <>
       <Navbar />
-      <Box sx={{ bgcolor: '#f8f9fa', minHeight: 'calc(100vh - 64px)', py: 6 }}>
+      <Box sx={{ bgcolor: '#f8f9fa', minHeight: 'calc(100vh - 64px)', py: 8 }}>
         <Container maxWidth="lg">
+          {/* Header Section */}
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
+            <Typography
+              variant="h3"
+              component="h1"
+              sx={{
+                fontWeight: 'bold',
+                mb: 2,
+                color: '#1a1a1a',
+                fontSize: { xs: '1.8rem', md: '2.5rem' },
+              }}
+            >
+              🎓 Engineering Branch Guide
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: '#666',
+                fontWeight: 400,
+                mb: 4,
+                maxWidth: '600px',
+                margin: '0 auto',
+              }}
+            >
+              Explore different engineering branches and find the perfect career path that matches your interests and goals
+            </Typography>
+          </Box>
+
+          {/* Info Cards */}
+          <Grid container spacing={3} sx={{ mb: 8, display: 'flex', flexWrap: 'nowrap' }}>
+            {[
+              { icon: '📚', title: 'Diverse Paths', desc: 'Choose from 5+ engineering specializations' },
+              { icon: '💼', title: 'Career Ready', desc: 'Direct pathway to industry opportunities' },
+              { icon: '💰', title: 'Great Salaries', desc: '₹4-15 LPA average package' },
+              { icon: '🚀', title: 'Future Ready', desc: 'Growing sectors with emerging technologies' },
+            ].map((item, idx) => (
+              <Grid item xs={3} sm={3} md={3} key={idx} sx={{ flex: '1 1 calc(25% - 6px)', minWidth: 0 }}>
+                <Paper
+                  sx={{
+                    p: 3,
+                    textAlign: 'center',
+                    borderRadius: 2,
+                    border: '2px solid #667eea30',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                      borderColor: '#667eea',
+                    },
+                  }}
+                >
+                  <Typography sx={{ fontSize: '2rem', mb: 1 }}>{item.icon}</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: '#1a1a1a' }}>
+                    {item.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#666' }}>
+                    {item.desc}
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Branches Grid */}
           <Typography
-            variant="h3"
-            component="h1"
-            sx={{
-              fontWeight: 'bold',
-              textAlign: 'center',
-              mb: 4,
-              color: '#1a1a1a',
-            }}
+            variant="h5"
+            sx={{ fontWeight: 'bold', mb: 4, color: '#1a1a1a', textAlign: 'center' }}
           >
-            Engineering Branch Guide
+            Choose Your Engineering Specialization
           </Typography>
 
-          <Paper elevation={2} sx={{ p: 4, mb: 6, borderRadius: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3, color: '#667eea' }}>
-              Choose Your Engineering Path
-            </Typography>
-            <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
-              Engineering offers diverse career opportunities across various specializations.
-              Each branch has its unique focus areas, career prospects, and future scope.
-              Use this guide to understand different engineering branches and make an informed decision.
-            </Typography>
-          </Paper>
-
-          <Grid container spacing={3}>
-            {branches.map((branch, index) => {
+          <Grid container spacing={3} sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {branches.slice(0, 3).map((branch, index) => {
               const IconComponent = branch.icon;
+              
               return (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 3 }}>
-                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                      <IconComponent sx={{ fontSize: 50, color: branch.color, mb: 2 }} />
-                      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                <Grid 
+                  item 
+                  xs={12}
+                  sm={6}
+                  md={4}
+                  key={index}
+                >
+                  <Card
+                    sx={{
+                      height: '100%',
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      border: `2px solid ${branch.lightColor}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
+                        borderColor: branch.color,
+                      },
+                    }}
+                  >
+                    {/* Card Header */}
+                    <Box
+                      sx={{
+                        background: `linear-gradient(135deg, ${branch.color} 0%, ${branch.color}dd 100%)`,
+                        p: 3,
+                        color: 'white',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <IconComponent sx={{ fontSize: 48, mb: 1 }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 'bold', mb: 1, fontSize: '1.1rem' }}
+                      >
                         {branch.name}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 60 }}>
+                      <Typography variant="body2" sx={{ opacity: 0.95 }}>
                         {branch.description}
                       </Typography>
-                      <Box sx={{ mb: 2 }}>
-                        <Chip label={`Avg Salary: ${branch.salary}`} size="small" sx={{ mb: 1 }} />
+                    </Box>
+
+                    {/* Card Content */}
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      {/* Salary */}
+                      <Box sx={{ mb: 2.5, pb: 2.5, borderBottom: '1px solid #f0f0f0' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <WorkIcon sx={{ fontSize: 20, color: branch.color }} />
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#666' }}>
+                            Average Salary
+                          </Typography>
+                        </Box>
+                        <Typography
+                          sx={{
+                            fontSize: '1.4rem',
+                            fontWeight: 'bold',
+                            color: branch.color,
+                          }}
+                        >
+                          {branch.salary}
+                        </Typography>
                       </Box>
-                      <Accordion
-                        expanded={expanded === `panel${index}`}
-                        onChange={handleChange(`panel${index}`)}
-                        sx={{ boxShadow: 'none', '&:before': { display: 'none' } }}
-                      >
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                            Learn More
+
+                      {/* Demand */}
+                      <Box sx={{ mb: 2.5, pb: 2.5, borderBottom: '1px solid #f0f0f0' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <TrendingUpIcon sx={{ fontSize: 20, color: branch.color }} />
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#666' }}>
+                              Market Demand
+                            </Typography>
+                          </Box>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: branch.color }}>
+                            {branch.demand}%
                           </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                          <Typography variant="body2" sx={{ mb: 1 }}>
-                            <strong>Career Options:</strong> {branch.career}
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>Future Scope:</strong> {branch.future}
-                          </Typography>
-                        </AccordionDetails>
-                      </Accordion>
+                        </Box>
+                        <LinearProgress
+                          variant="determinate"
+                          value={branch.demand}
+                          sx={{
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: `${branch.color}20`,
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: branch.color,
+                            },
+                          }}
+                        />
+                      </Box>
+
+                      {/* Rating */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <StarIcon sx={{ fontSize: 20, color: '#FFA500' }} />
+                        <Rating
+                          value={branch.rating}
+                          readOnly
+                          size="small"
+                          sx={{
+                            '& .MuiRating-iconFilled': {
+                              color: '#FFA500',
+                            },
+                          }}
+                        />
+                        <Typography variant="body2" sx={{ color: '#666' }}>
+                          {branch.rating}.0/5
+                        </Typography>
+                      </Box>
+
+                      {/* Top Skills */}
+                      <Box sx={{ mb: 2 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 'bold', color: '#666', mb: 1 }}
+                        >
+                          Key Skills:
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {branch.skills.slice(0, 3).map((skill, idx) => (
+                            <Chip
+                              key={idx}
+                              label={skill}
+                              size="small"
+                              sx={{
+                                backgroundColor: `${branch.color}15`,
+                                color: branch.color,
+                                fontWeight: 'bold',
+                                fontSize: '0.75rem',
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
                     </CardContent>
+
+                    {/* Card Actions */}
+                    <CardActions sx={{ pt: 0, pb: 2, px: 2 }}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          background: `linear-gradient(135deg, ${branch.color} 0%, ${branch.color}dd 100%)`,
+                          textTransform: 'none',
+                          fontWeight: 'bold',
+                          borderRadius: 2,
+                          py: 1.2,
+                          '&:hover': {
+                            transform: 'scale(1.02)',
+                          },
+                        }}
+                        onClick={() => handleOpenDialog(branch)}
+                      >
+                        Learn More
+                      </Button>
+                    </CardActions>
                   </Card>
                 </Grid>
               );
             })}
           </Grid>
 
-          <Paper elevation={2} sx={{ p: 4, mt: 6, borderRadius: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3, color: '#667eea' }}>
-              Making the Right Choice
-            </Typography>
-            <Typography variant="body1" sx={{ lineHeight: 1.7, mb: 2 }}>
-              When choosing an engineering branch, consider your interests, strengths, and career goals.
-              Research job prospects, salary ranges, and industry trends. Many engineers also pursue
-              higher studies or certifications to specialize further in their chosen field.
-            </Typography>
-            <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
-              Remember, your branch choice doesn't limit your career options. Many engineers work
-              across disciplines, and continuous learning is key to success in the engineering field.
-            </Typography>
-          </Paper>
+          {/* Last two branches centered */}
+          <Grid container spacing={3} sx={{ justifyContent: 'center', mt: 3 }}>
+            {branches.slice(3).map((branch, index) => {
+              const IconComponent = branch.icon;
+              return (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card
+                    sx={{
+                      height: '100%',
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      border: `2px solid ${branch.lightColor}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
+                        borderColor: branch.color,
+                      },
+                    }}
+                  >
+                    {/* Card Header */}
+                    <Box
+                      sx={{
+                        background: `linear-gradient(135deg, ${branch.color} 0%, ${branch.color}dd 100%)`,
+                        p: 3,
+                        color: 'white',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <IconComponent sx={{ fontSize: 48, mb: 1 }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 'bold', mb: 1, fontSize: '1.1rem' }}
+                      >
+                        {branch.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ opacity: 0.95 }}>
+                        {branch.description}
+                      </Typography>
+                    </Box>
+
+                    {/* Card Content */}
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      {/* Salary */}
+                      <Box sx={{ mb: 2.5, pb: 2.5, borderBottom: '1px solid #f0f0f0' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <WorkIcon sx={{ fontSize: 20, color: branch.color }} />
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#666' }}>
+                            Average Salary
+                          </Typography>
+                        </Box>
+                        <Typography
+                          sx={{
+                            fontSize: '1.4rem',
+                            fontWeight: 'bold',
+                            color: branch.color,
+                          }}
+                        >
+                          {branch.salary}
+                        </Typography>
+                      </Box>
+
+                      {/* Demand */}
+                      <Box sx={{ mb: 2.5, pb: 2.5, borderBottom: '1px solid #f0f0f0' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <TrendingUpIcon sx={{ fontSize: 20, color: branch.color }} />
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#666' }}>
+                              Market Demand
+                            </Typography>
+                          </Box>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: branch.color }}>
+                            {branch.demand}%
+                          </Typography>
+                        </Box>
+                        <LinearProgress
+                          variant="determinate"
+                          value={branch.demand}
+                          sx={{
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: `${branch.color}20`,
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: branch.color,
+                            },
+                          }}
+                        />
+                      </Box>
+
+                      {/* Rating */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <StarIcon sx={{ fontSize: 20, color: '#FFA500' }} />
+                        <Rating
+                          value={branch.rating}
+                          readOnly
+                          size="small"
+                          sx={{
+                            '& .MuiRating-iconFilled': {
+                              color: '#FFA500',
+                            },
+                          }}
+                        />
+                        <Typography variant="body2" sx={{ color: '#666' }}>
+                          {branch.rating}.0/5
+                        </Typography>
+                      </Box>
+
+                      {/* Top Skills */}
+                      <Box sx={{ mb: 2 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 'bold', color: '#666', mb: 1 }}
+                        >
+                          Key Skills:
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {branch.skills.slice(0, 3).map((skill, idx) => (
+                            <Chip
+                              key={idx}
+                              label={skill}
+                              size="small"
+                              sx={{
+                                backgroundColor: `${branch.color}15`,
+                                color: branch.color,
+                                fontWeight: 'bold',
+                                fontSize: '0.75rem',
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+                    </CardContent>
+
+                    {/* Card Actions */}
+                    <CardActions sx={{ pt: 0, pb: 2, px: 2 }}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          background: `linear-gradient(135deg, ${branch.color} 0%, ${branch.color}dd 100%)`,
+                          textTransform: 'none',
+                          fontWeight: 'bold',
+                          borderRadius: 2,
+                          py: 1.2,
+                          '&:hover': {
+                            transform: 'scale(1.02)',
+                          },
+                        }}
+                        onClick={() => handleOpenDialog(branch)}
+                      >
+                        Learn More
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
         </Container>
       </Box>
+
+      {/* Detailed Info Dialog */}
+      {selectedBranch && (
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            }
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: `linear-gradient(135deg, ${selectedBranch.color} 0%, ${selectedBranch.color}dd 100%)`,
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '1.3rem',
+              py: 3,
+            }}
+          >
+            {selectedBranch.name}
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Typography variant="body2" sx={{ mb: 2, color: '#666', lineHeight: 1.6 }}>
+              <strong>Overview:</strong> {selectedBranch.overview}
+            </Typography>
+
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 'bold', mb: 1, color: selectedBranch.color }}
+            >
+              🎯 Career Opportunities:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+              {selectedBranch.careers.map((career, idx) => (
+                <Chip
+                  key={idx}
+                  label={career}
+                  icon={<WorkIcon />}
+                  sx={{
+                    backgroundColor: `${selectedBranch.color}15`,
+                    color: selectedBranch.color,
+                    fontWeight: 'bold',
+                  }}
+                />
+              ))}
+            </Box>
+
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 'bold', mb: 1, color: selectedBranch.color }}
+            >
+              🚀 Future Prospects:
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 3, color: '#666', lineHeight: 1.6 }}>
+              {selectedBranch.future}
+            </Typography>
+
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 'bold', mb: 1, color: selectedBranch.color }}
+            >
+              💡 Essential Skills:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {selectedBranch.skills.map((skill, idx) => (
+                <Chip
+                  key={idx}
+                  label={skill}
+                  sx={{
+                    backgroundColor: `${selectedBranch.color}15`,
+                    color: selectedBranch.color,
+                    fontWeight: 'bold',
+                  }}
+                />
+              ))}
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button
+              onClick={handleCloseDialog}
+              variant="outlined"
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold' }}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </>
   );
 };

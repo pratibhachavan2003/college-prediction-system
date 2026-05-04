@@ -1,0 +1,22 @@
+﻿# Root gitignore for college_prediction_system
+
+# Node
+node_modules/
+build/
+dist/
+coverage/
+.env
+.vscode/
+
+# Java/Maven
+target/
+*.class
+*.log
+*.iml
+.idea/
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db

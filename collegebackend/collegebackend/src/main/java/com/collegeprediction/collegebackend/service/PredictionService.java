@@ -5,11 +5,15 @@ import com.collegeprediction.collegebackend.model.College;
 import com.collegeprediction.collegebackend.repository.CollegeRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+
 public class PredictionService {
 
   private final CollegeRepository collegeRepository;
@@ -21,76 +25,235 @@ public class PredictionService {
   /**
    * Enhanced prediction algorithm for MHT-CET B.Tech:
    * - Filter colleges by branch if specified
+   * - Filter colleges by preferred location/city if specified
    * - Calculate composite score based on MHT-CET percentile and 12th PCM
    * - Recommend colleges where student.score >= cutoffScore
    * - Sort by ranking and closeness to student's score
    */
   public List<College> predict(StudentRequest request) {
     List<College> candidates = collegeRepository.findAll();
+    System.out.println("Found " + candidates.size() + " colleges in database");
 
-    // Calculate a composite score depending on exam type (all scaled to 0-100)
-    double compositeScore = 0.0;
-    String exam = request.getExamType() == null ? "JEE" : request.getExamType().toUpperCase();
-    switch (exam) {
-      case "MHT-CET":
-      case "MHTCET":
-      case "MH-CET":
-        double cet = nullSafe(request.getMhtCetPercentile());
-        double pcm = nullSafe(request.getTwelfthPCM());
-        compositeScore = (cet * 0.7) + (pcm * 0.3);
-        break;
-      case "NEET":
-        double neet = (nullSafe(request.getNeetScore()) / 720.0) * 100.0;
-        compositeScore = neet;
-        break;
-      case "BOARD":
-        compositeScore = (nullSafe(request.getTwelfthPercentage()) * 0.7)
-            + (nullSafe(request.getTenthPercentage()) * 0.3);
-        break;
-      case "JEE":
-      default:
-        double normalizedJee = (nullSafe(request.getJeeScore()) / 360.0) * 100.0;
-        compositeScore = (normalizedJee * 0.5)
-            + (nullSafe(request.getTwelfthPercentage()) * 0.3)
-            + (nullSafe(request.getTenthPercentage()) * 0.2);
-        break;
+    // Filter by preferred branch if specified
+    if (request.getPreferredBranch() != null && !request.getPreferredBranch().isEmpty()) {
+      List<College> beforeBranchFilter = candidates;
+      candidates = candidates.stream()
+          .filter(c -> branchMatches(request.getPreferredBranch(), c.getBranch()))
+          .collect(Collectors.toList());
+      if (candidates.isEmpty()) {
+        System.out.println("Branch filter produced no matches for '" + request.getPreferredBranch() + "'. Skipping branch filter.");
+        candidates = beforeBranchFilter;
+      } else {
+        System.out.println("After branch filter: " + candidates.size() + " colleges");
+      }
     }
 
-    // Small category relaxation bonus (very simplified)
-    String category = request.getCategory() == null ? "GENERAL" : request.getCategory().toUpperCase();
-    if ("OBC".equals(category))
-      compositeScore += 1.0;
-    if ("SC".equals(category))
-      compositeScore += 2.0;
-    if ("ST".equals(category))
-      compositeScore += 3.0;
+    // Filter by preferred college type if specified and not "All"
+    if (request.getPreferredCollegeType() != null && !request.getPreferredCollegeType().isEmpty()
+            && !request.getPreferredCollegeType().equalsIgnoreCase("All")) {
+      candidates = candidates.stream()
+          .filter(c -> request.getPreferredCollegeType().equalsIgnoreCase(c.getCollegeType()))
+          .collect(Collectors.toList());
+      System.out.println("After college type filter: " + candidates.size() + " colleges");
+    } else {
+      // skip filter when user wants all types or didn't specify
+      System.out.println("Skipping college type filter (All or unspecified)");
+    }
 
-    final double finalScore = compositeScore;
-    String branch = request.getPreferredBranch() == null ? "" : request.getPreferredBranch().toUpperCase();
+    // Filter by year session if specified
+    String requestedYear = request.getYearSession() == null ? "" : request.getYearSession().trim();
+    if (!requestedYear.isEmpty()) {
+      try {
+        int year = Integer.parseInt(requestedYear);
+        List<College> beforeYearFilter = candidates;
+        candidates = candidates.stream()
+            .filter(c -> c.getCutoffYear() == year)
+            .collect(Collectors.toList());
+        if (candidates.isEmpty()) {
+          System.out.println("Year session filter produced no matches for '" + requestedYear + "'. Skipping year filter.");
+          candidates = beforeYearFilter;
+        } else {
+          System.out.println("After year session filter: " + candidates.size() + " colleges");
+        }
+      } catch (NumberFormatException e) {
+        System.out.println("Skipping year session filter because year is invalid: " + requestedYear);
+      }
+    } else {
+      System.out.println("Skipping year session filter (unspecified)");
+    }
 
-    // Filter by branch if specified, filter by score (student score >= college
-    // cutoff)
-    // Then rank colleges by closeness to student's composite score
-    return candidates.stream()
-        .filter(c -> {
-          // Filter by branch if specified
-          if (branch != null && !branch.isEmpty()) {
-            String collegeBranch = c.getBranch() == null ? "" : c.getBranch().toUpperCase();
-            if (!collegeBranch.contains(branch)) {
-              return false;
-            }
+    // Filter by CAP round if specified and not "All Rounds"
+    String requestedCapRound = request.getCapRound() == null ? "" : request.getCapRound().trim();
+    if (!requestedCapRound.isEmpty() && !requestedCapRound.equalsIgnoreCase("All Rounds") && !requestedCapRound.equalsIgnoreCase("All")) {
+      int capRoundNumber = parseCapRound(requestedCapRound);
+      if (capRoundNumber > 0) {
+        boolean hasRoundData = candidates.stream().anyMatch(c -> c.getCapRound() > 0);
+        if (!hasRoundData) {
+          System.out.println("CAP round data missing for candidates; skipping round filter.");
+        } else {
+          List<College> beforeCapFilter = candidates;
+          candidates = candidates.stream()
+              .filter(c -> c.getCapRound() == capRoundNumber)
+              .collect(Collectors.toList());
+          if (candidates.isEmpty() && capRoundNumber == 1) {
+            // Some datasets may store 0 as default capRound for Round 1 entries
+            candidates = beforeCapFilter.stream()
+                .filter(c -> c.getCapRound() == 0)
+                .collect(Collectors.toList());
+            System.out.println("Round 1 filter found no explicit round data; including capRound=0 candidates: " + candidates.size() + " colleges");
+          } else {
+            System.out.println("After CAP round filter: " + candidates.size() + " colleges");
           }
-          // Filter by score - student score should be >= college cutoff (allowing small
-          // margin)
-          return finalScore >= (nullSafe(c.getCutoffScore()) - 5.0);
-        })
-        .sorted(Comparator.comparingDouble(College::getRankingScore).reversed()
-            .thenComparingDouble((College c) -> Math.abs(nullSafe(c.getCutoffScore()) - finalScore)))
-        .limit(10)
+        }
+      } else {
+        System.out.println("Skipping CAP round filter because round is invalid: " + requestedCapRound);
+      }
+    } else {
+      System.out.println("Skipping CAP round filter (All or unspecified)");
+    }
+
+    // Filter by location if specified and not "All"
+    String requestedLocation = request.getLocation() == null ? "" : request.getLocation().trim();
+    if (!requestedLocation.isEmpty() && !requestedLocation.equalsIgnoreCase("All")) {
+      List<College> beforeLocationFilter = candidates;
+      candidates = candidates.stream()
+          .filter(c -> {
+            String city = c.getCity() == null ? "" : c.getCity().trim();
+            return city.equalsIgnoreCase(requestedLocation)
+                || city.toLowerCase().contains(requestedLocation.toLowerCase());
+          })
+          .collect(Collectors.toList());
+      if (candidates.isEmpty()) {
+        System.out.println("Location filter produced no matches for '" + requestedLocation + "'. Skipping location filter.");
+        candidates = beforeLocationFilter;
+      } else {
+        System.out.println("After location filter: " + candidates.size() + " colleges");
+      }
+    } else {
+      System.out.println("Skipping location filter (All or unspecified)");
+    }
+
+    // Calculate student composite score
+    double studentScore = calculateStudentScore(request);
+    System.out.println("Student composite score: " + studentScore);
+
+    // Prefer colleges where cutoff is within reach, but don't return an empty list when score is low
+    List<College> scoreMatched = candidates.stream()
+        .filter(c -> c.getCutoffScore() <= studentScore)
+        .distinct()
         .collect(Collectors.toList());
+
+    if (!scoreMatched.isEmpty()) {
+      candidates = scoreMatched;
+      System.out.println("After score filter and deduplication: " + candidates.size() + " colleges");
+    } else {
+      // Fallback: return best matches even if all cutoffs are above the student's score
+      candidates = candidates.stream()
+          .distinct()
+          .collect(Collectors.toList());
+      System.out.println("No colleges met the cutoff threshold; returning " + candidates.size() + " best match candidates instead");
+    }
+
+    // Sort by ranking score descending, then by closeness to student score
+    candidates.sort(Comparator
+        .comparing(College::getRankingScore, Comparator.reverseOrder())
+        .thenComparing(c -> Math.abs(c.getCutoffScore() - studentScore)));
+
+    candidates = dedupeColleges(candidates);
+    return candidates;
   }
 
-  private static double nullSafe(Double value) {
-    return value == null ? 0.0 : value;
+  private List<College> dedupeColleges(List<College> colleges) {
+    Map<String, College> uniqueMap = new LinkedHashMap<>();
+    for (College college : colleges) {
+      String key = normalizeText(college.getName()) + "|" + normalizeBranch(college.getBranch()) + "|" + normalizeText(college.getCity());
+      uniqueMap.putIfAbsent(key, college);
+    }
+    return new ArrayList<>(uniqueMap.values());
+  }
+
+  private String normalizeBranch(String branch) {
+    if (branch == null) {
+      return "";
+    }
+    String normalized = normalizeText(branch);
+    if (normalized.contains("computer science") || normalized.contains("cse")) {
+      return "cse";
+    }
+    if (normalized.contains("mechanical")) {
+      return "mechanical";
+    }
+    if (normalized.contains("civil")) {
+      return "civil";
+    }
+    if (normalized.contains("electrical")) {
+      return "electrical";
+    }
+    if (normalized.contains("chemical")) {
+      return "chemical";
+    }
+    return normalized;
+  }
+
+  private double calculateStudentScore(StudentRequest request) {
+    double score = 0.0;
+    int count = 0;
+
+    if (request.getMhtCetPercentile() != null) {
+      score += request.getMhtCetPercentile();
+      count++;
+    }
+    if (request.getTwelfthPCM() != null) {
+      score += request.getTwelfthPCM();
+      count++;
+    }
+    if (request.getJeeScore() != null && request.getJeeScore() > 0) {
+      // Convert JEE score to percentile approx
+      double jeePercentile = (request.getJeeScore() / 360.0) * 100.0;
+      score += jeePercentile;
+      count++;
+    }
+    if (request.getTwelfthPercentage() != null) {
+      score += request.getTwelfthPercentage();
+      count++;
+    }
+
+    return count > 0 ? score / count : 0.0;
+  }
+
+  private int parseCapRound(String capRoundLabel) {
+    if (capRoundLabel == null) {
+      return -1;
+    }
+    try {
+      String cleaned = capRoundLabel.toLowerCase().replace("round", "").trim();
+      return Integer.parseInt(cleaned);
+    } catch (NumberFormatException e) {
+      return -1;
+    }
+  }
+
+  private boolean branchMatches(String requestedBranch, String collegeBranch) {
+    if (requestedBranch == null || collegeBranch == null) {
+      return false;
+    }
+    String normalizedRequested = normalizeText(requestedBranch);
+    String normalizedCollege = normalizeText(collegeBranch);
+    if (normalizedRequested.equals(normalizedCollege)) {
+      return true;
+    }
+    if (normalizedRequested.contains(normalizedCollege) || normalizedCollege.contains(normalizedRequested)) {
+      return true;
+    }
+    // Handle common branch synonyms like CSE and Computer Science
+    if ((normalizedRequested.contains("cse") || normalizedRequested.contains("computer science"))
+            && (normalizedCollege.contains("cse") || normalizedCollege.contains("computer science"))) {
+      return true;
+    }
+    return false;
+  }
+
+  private String normalizeText(String text) {
+    return text == null ? "" : text.toLowerCase().replaceAll("[^a-z0-9]", " ").trim().replaceAll("\\s+", " ");
   }
 }

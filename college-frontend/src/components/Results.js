@@ -6,39 +6,54 @@ import {
   Box,
   Button,
   Pagination,
-  Card,
-  CardContent,
-  Grid,
   IconButton,
   Tabs,
   Tab,
   Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Collapse,
+  // Dialog,
+  // DialogTitle,
+  // DialogContent,
+  // DialogActions,
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import SchoolIcon from '@mui/icons-material/School';
-import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import GetAppIcon from '@mui/icons-material/GetApp';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import PredictionResult from './PredictionResult';
 
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const predictions = location.state?.predictions || (() => {
+  const storedPredictions = React.useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('predictions') || '[]');
     } catch {
       return [];
     }
-  })();
+  }, []);
+  const predictions = location.state && location.state.predictions !== undefined
+    ? location.state.predictions
+    : storedPredictions;
+
+  // Get student percentile from the last prediction payload
+  const lastPayload = JSON.parse(localStorage.getItem('lastPredictionPayload') || '{}');
+  const studentPercentile = lastPayload.mhtCetPercentile || lastPayload.cetScore || 0;
 
   const [page, setPage] = useState(1);
   const [tabValue, setTabValue] = useState(0);
-  const pageSize = 9;
+  const [expandedRow, setExpandedRow] = useState(null);
+  // AI counselling dialog state removed (no longer used)
+  // const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  // const [selectedCollege, setSelectedCollege] = useState(null);
+  const pageSize = 10;
 
   const [myList, setMyList] = useState(() => {
     try {
@@ -52,11 +67,31 @@ const Results = () => {
     localStorage.setItem('myList', JSON.stringify(myList));
   }, [myList]);
 
-  const filtered = predictions;
+  const canonicalBranch = (branch) => {
+    const normalized = (branch || '').trim().toLowerCase();
+    if (normalized.includes('computer science') || normalized === 'cse') return 'cse';
+    if (normalized.includes('mechanical')) return 'mechanical';
+    if (normalized.includes('civil')) return 'civil';
+    if (normalized.includes('electrical')) return 'electrical';
+    if (normalized.includes('chemical')) return 'chemical';
+    return normalized;
+  };
+
+  const uniquePredictions = React.useMemo(() => {
+    const map = new Map();
+    (predictions || []).forEach((college) => {
+      const key = `${college.name?.trim().toLowerCase() || ''}|${canonicalBranch(college.branch)}|${college.city?.trim().toLowerCase() || ''}`;
+      if (!map.has(key)) {
+        map.set(key, college);
+      }
+    });
+    return Array.from(map.values());
+  }, [predictions]);
+  const filtered = uniquePredictions;
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-  const hasPredictions = predictions.length > 0;
+  const hasPredictions = uniquePredictions.length > 0;
 
   const getGreeting = () => {
     try {
@@ -69,7 +104,7 @@ const Results = () => {
 
   const addToMyList = (college) => {
     if (!myList.find(c => c.id === college.id)) {
-      setMyList([...myList, { ...college, order: myList.length }]);
+      setMyList([...myList, college]);
     }
   };
 
@@ -77,234 +112,335 @@ const Results = () => {
     setMyList(myList.filter(c => c.id !== collegeId));
   };
 
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
+  // handlers for optional features (buttons removed)
+  // const handleCompareColleges = (college) => {
+  //   navigate('/compare', { state: { college } });
+  // };
 
-    const items = Array.from(myList);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  // const handleAskAI = (college) => {
+  //   setSelectedCollege(college);
+  //   setAiDialogOpen(true);
+  // };
 
-    setMyList(items);
-  };
-
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text('My College List', 20, 30);
-
-    myList.forEach((college, index) => {
-      const y = 50 + index * 20;
-      doc.setFontSize(12);
-      doc.text(`${index + 1}. ${college.name}`, 20, y);
-      doc.text(`   Branch: ${college.branch || 'N/A'}`, 20, y + 5);
-      doc.text(`   City: ${college.city || 'N/A'}`, 20, y + 10);
-      doc.text(`   Type: ${college.collegeType || 'N/A'}`, 20, y + 15);
-    });
-
-    doc.save('my_college_list.pdf');
-  };
-
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(myList.map((college, index) => ({
-      'S.No': index + 1,
-      'College Name': college.name,
-      'Branch': college.branch || 'N/A',
-      'City': college.city || 'N/A',
-      'College Type': college.collegeType || 'N/A',
-      'Cutoff Score': college.cutoffScore || 'N/A',
-    })));
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'My List');
-    XLSX.writeFile(workbook, 'my_college_list.xlsx');
-  };
 
   return (
     <>
       <Navbar />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#1a1a1a' }}>
-            College Prediction Results
-          </Typography>
-          <Paper elevation={0} sx={{ bgcolor: '#f5f5f5', p: 3, borderRadius: 2, mb: 4 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1a1a1a', mb: 2 }}>
-              Hello, {getGreeting()}!
+      <Box sx={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#1a365d', mb: 2 }}>
+              Your Predictions
             </Typography>
-            <Typography variant="body1" sx={{ color: '#333', mb: 3 }}>
-              Based on your exam scores and preferences, here are your predicted colleges.
-            </Typography>
-          </Paper>
-        </Box>
+            <Paper elevation={0} sx={{ 
+              bgcolor: 'rgba(255, 255, 255, 0.95)', 
+              p: { xs: 2, md: 3 }, 
+              borderRadius: 3,
+              border: '1px solid rgba(102, 126, 234, 0.2)',
+              mb: 4,
+              backdropFilter: 'blur(10px)',
+            }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1a365d', mb: 1.5 }}>
+                Hey, {getGreeting()}! 👋
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#475569', lineHeight: 1.6 }}>
+                Based on your exam scores, here are your predicted colleges. Click on any college row to see detailed admission analysis or "Save" to add to your list.
+              </Typography>
+            </Paper>
+          </Box>
 
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
-          <Tab label={`Predictions (${predictions.length})`} />
-          <Tab label={`My List (${myList.length})`} />
-        </Tabs>
+          <Tabs 
+            value={tabValue} 
+            onChange={(e, newValue) => setTabValue(newValue)} 
+            sx={{ 
+              mb: 3,
+              '& .MuiTab-root': {
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                textTransform: 'none',
+                color: '#64748b',
+                '&.Mui-selected': {
+                  color: '#667eea',
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#667eea',
+                height: 3,
+              },
+            }}
+          >
+            <Tab label={`Predictions (${uniquePredictions.length})`} />
+            <Tab label={`My List (${myList.length})`} />
+          </Tabs>
 
-        {tabValue === 0 && (
-          <>
-            {hasPredictions ? (
-              <>
-                <Grid container spacing={2}>
-                  {paged.map((college, index) => {
-                    const globalIndex = (page - 1) * pageSize + index;
-                    const isInList = myList.find(c => c.id === college.id);
-                    return (
-                      <Grid item xs={12} sm={6} md={4} key={globalIndex}>
-                        <Card sx={{ height: '100%', borderRadius: 2 }}>
-                          <CardContent>
-                            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+
+          {/* Predictions Tab */}
+          {tabValue === 0 && hasPredictions ? (
+            <Box>
+              <TableContainer component={Paper} sx={{ boxShadow: 1, borderRadius: 2, mb: 3, overflow: 'auto' }}>
+                <Table sx={{ minWidth: 800 }}>
+                  <TableHead sx={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #667eea' }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 700, color: '#1a365d', width: '5%' }}>Expand</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: '#1a365d' }}>College Name</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: '#1a365d' }} align="center">Branch</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: '#1a365d', width: '12%' }} align="center">Admission %</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: '#1a365d' }} align="center">Quick Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paged.map((college, index) => {
+                      const globalIndex = (page - 1) * pageSize + index;
+                      const mappedResult = {
+                        collegeName: college.name,
+                        branch: college.branch || college.department || 'N/A',
+                        probability: college.probability ?? Math.min(100, Math.max(5, Math.round((studentPercentile - (college.cutoffScore ?? 0)) + 70))),
+                        studentPercentile: studentPercentile,
+                        lastYearCutoff: college.cutoffScore ?? 0,
+                        category: college.category || 'GENERAL',
+                      };
+
+                      const isExpanded = expandedRow === globalIndex;
+                      const isSaved = myList.find(c => c.id === college.id);
+
+                      return (
+                        <React.Fragment key={globalIndex}>
+                          <TableRow
+                            sx={{
+                              backgroundColor: isExpanded ? '#f0f4ff' : 'white',
+                              '&:hover': { backgroundColor: '#f8fafc' },
+                              transition: 'background-color 0.2s',
+                            }}
+                          >
+                            <TableCell align="center">
+                              <IconButton
+                                size="small"
+                                onClick={() => setExpandedRow(isExpanded ? null : globalIndex)}
+                                sx={{
+                                  transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                  transition: 'transform 0.3s',
+                                  color: '#667eea',
+                                }}
+                              >
+                                <ExpandMoreIcon />
+                              </IconButton>
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 600, color: '#1a365d' }}>
                               {college.name}
-                            </Typography>
-                            <Box sx={{ mb: 2 }}>
-                              <Chip label={college.branch || 'N/A'} size="small" sx={{ mr: 1, mb: 1 }} />
-                              <Chip label={college.city || 'N/A'} size="small" sx={{ mr: 1, mb: 1 }} />
-                              <Chip label={college.collegeType || 'N/A'} size="small" sx={{ mb: 1 }} />
-                            </Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                              Cutoff Score: {college.cutoffScore?.toFixed(1) || 'N/A'}
-                            </Typography>
-                            <Button
-                              variant={isInList ? "outlined" : "contained"}
-                              size="small"
-                              onClick={() => isInList ? removeFromMyList(college.id) : addToMyList(college)}
-                              startIcon={isInList ? <RemoveIcon /> : <AddIcon />}
-                              fullWidth
-                            >
-                              {isInList ? 'Remove from List' : 'Add to My List'}
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    );
-                  })}
-                </Grid>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Chip 
+                                label={college.branch || 'N/A'} 
+                                size="small" 
+                                variant="outlined" 
+                                sx={{ borderColor: '#667eea', color: '#667eea' }}
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <Typography
+                                sx={{
+                                  fontWeight: 700,
+                                  fontSize: '1.1rem',
+                                  color: mappedResult.probability >= 70 ? '#4caf50' : mappedResult.probability >= 50 ? '#ff9800' : '#f44336',
+                                }}
+                              >
+                                {mappedResult.probability}%
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                                
+                                <Button
+                                  size="small"
+                                  variant={isSaved ? 'outlined' : 'text'}
+                                  onClick={() => isSaved ? removeFromMyList(college.id) : addToMyList(college)}
+                                  sx={{
+                                    color: '#667eea',
+                                    fontWeight: 600,
+                                    textTransform: 'none',
+                                    fontSize: '0.75rem',
+                                    py: 0.5,
+                                    px: 1.5,
+                                  }}
+                                >
+                                  {isSaved ? 'Remove' : 'Save'}
+                                </Button>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
 
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                  <Pagination count={pageCount} page={page} onChange={(e, v) => setPage(v)} color="primary" />
-                </Box>
-              </>
-            ) : (
-              <Paper
-                elevation={3}
+                          {/* Expanded Row */}
+                          {isExpanded && (
+                            <TableRow sx={{ backgroundColor: '#f0f4ff' }}>
+                              <TableCell colSpan={5} sx={{ p: 0, borderBottom: '1px solid #e2e8f0' }}>
+                                <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                  <Box sx={{ py: 2, px: 2 }}>
+                                    <PredictionResult
+                                      result={mappedResult}
+                                    />
+                                  </Box>
+                                </Collapse>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                <Pagination 
+                  count={pageCount} 
+                  page={page} 
+                  onChange={(e, v) => { setPage(v); setExpandedRow(null); }} 
+                  color="primary" 
+                />
+              </Box>
+            </Box>
+          ) : tabValue === 0 && !hasPredictions ? (
+            <Paper
+              elevation={3}
+              sx={{
+                p: { xs: 4, md: 6 },
+                mt: 2,
+                textAlign: 'center',
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                border: '1px solid rgba(102, 126, 234, 0.2)',
+              }}
+            >
+              <SchoolIcon sx={{ fontSize: 80, color: '#667eea', mb: 2 }} />
+              <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', color: '#1a365d' }}>
+                No predictions yet
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3, color: '#475569' }}>
+                Complete the prediction form to see your matched colleges and get admission probability insights.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={() => navigate('/')}
                 sx={{
-                  p: 6,
-                  mt: 2,
-                  textAlign: 'center',
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  textTransform: 'none',
                   borderRadius: 2,
-                  background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                    transform: 'translateY(-2px)',
+                  },
                 }}
               >
-                <SchoolIcon sx={{ fontSize: 80, color: '#667eea', mb: 2 }} />
-                <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
-                  No predictions available
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                  Submit a prediction request to see your matched colleges here.
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  onClick={() => navigate('/predictor')}
+                Back to Home
+              </Button>
+            </Paper>
+          ) : null}
+
+          {/* My List Tab */}
+          {tabValue === 1 ? (
+            <Box>
+              {myList.length > 0 ? (
+                <Box>
+                  {myList.map((college, index) => (
+                    <Box
+                      key={college.id || index}
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        bgcolor: 'rgba(255, 255, 255, 0.95)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(102, 126, 234, 0.1)',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: '0 8px 32px rgba(102, 126, 234, 0.12)',
+                        },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1a365d', mb: 1 }}>
+                            {college.name}
+                          </Typography>
+                          <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Chip 
+                              label={college.branch || 'N/A'} 
+                              size="small" 
+                              sx={{ 
+                                backgroundColor: '#f0f4ff',
+                                color: '#667eea',
+                                fontWeight: 600,
+                              }} 
+                            />
+                            <Chip 
+                              label={college.city || 'N/A'} 
+                              size="small"
+                              variant="outlined"
+                              sx={{ 
+                                borderColor: '#667eea',
+                                color: '#667eea',
+                              }} 
+                            />
+                            <Chip 
+                              label={college.collegeType || 'N/A'} 
+                              size="small"
+                              variant="outlined"
+                              sx={{ 
+                                borderColor: '#764ba2',
+                                color: '#764ba2',
+                              }} 
+                            />
+                          </Box>
+                        </Box>
+                        <Button
+                          onClick={() => removeFromMyList(college.id)}
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          startIcon={<RemoveIcon />}
+                          sx={{
+                            ml: 2,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            borderRadius: 1.5,
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Paper
+                  elevation={0}
                   sx={{
-                    px: 4,
-                    py: 1.5,
-                    fontSize: '1rem',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    p: 6,
+                    textAlign: 'center',
+                    borderRadius: 3,
+                    bgcolor: 'rgba(255, 255, 255, 0.95)',
+                    border: '1px solid rgba(102, 126, 234, 0.1)',
                   }}
                 >
-                  Start Prediction
-                </Button>
-              </Paper>
-            )}
-          </>
-        )}
-
-        {tabValue === 1 && (
-          <Box>
-            <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-              <Button
-                variant="contained"
-                startIcon={<GetAppIcon />}
-                onClick={exportToPDF}
-                disabled={myList.length === 0}
-              >
-                Export PDF
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<GetAppIcon />}
-                onClick={exportToExcel}
-                disabled={myList.length === 0}
-              >
-                Export Excel
-              </Button>
+                  <SchoolIcon sx={{ fontSize: 60, color: '#cbd5e1', mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 600, color: '#64748b' }}>
+                    Your list is empty
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#94a3b8', mt: 1 }}>
+                    Save colleges from the Predictions tab to build your list.
+                  </Typography>
+                </Paper>
+              )}
             </Box>
-
-            {myList.length > 0 ? (
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="my-list">
-                  {(provided) => (
-                    <Box {...provided.droppableProps} ref={provided.innerRef}>
-                      {myList.map((college, index) => (
-                        <Draggable key={college.id} draggableId={college.id.toString()} index={index}>
-                          {(provided) => (
-                            <Card
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              sx={{ mb: 2, borderRadius: 2 }}
-                            >
-                              <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <Box {...provided.dragHandleProps} sx={{ mr: 2 }}>
-                                    <DragIndicatorIcon />
-                                  </Box>
-                                  <Box sx={{ flexGrow: 1 }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                      {college.name}
-                                    </Typography>
-                                    <Box sx={{ mt: 1 }}>
-                                      <Chip label={college.branch || 'N/A'} size="small" sx={{ mr: 1 }} />
-                                      <Chip label={college.city || 'N/A'} size="small" sx={{ mr: 1 }} />
-                                      <Chip label={college.collegeType || 'N/A'} size="small" />
-                                    </Box>
-                                  </Box>
-                                  <IconButton
-                                    onClick={() => removeFromMyList(college.id)}
-                                    color="error"
-                                  >
-                                    <RemoveIcon />
-                                  </IconButton>
-                                </Box>
-                              </CardContent>
-                            </Card>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </Box>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            ) : (
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 6,
-                  textAlign: 'center',
-                  borderRadius: 2,
-                  bgcolor: '#f9f9f9',
-                }}
-              >
-                <Typography variant="h6" color="text.secondary">
-                  Your list is empty. Add colleges from the Predictions tab.
-                </Typography>
-              </Paper>
-            )}
-          </Box>
-        )}
-      </Container>
+          ) : null}
+        </Container>
+      </Box>
     </>
   );
 };

@@ -6,17 +6,19 @@ import CssBaseline from '@mui/material/CssBaseline';
 // Import components
 import Home from './components/Home';
 import Login from './components/Login';
-import StudentLogin from './components/StudentLogin';
-import StudentRegistrationNew from './components/StudentRegistrationNew';
 import Results from './components/Results';
 import PredictorDashboard from './components/PredictorDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import CutoffAnalytics from './components/CutoffAnalytics';
 import About from './components/About';
 import Contact from './components/Contact';
 import BranchGuide from './components/BranchGuide';
 import AICounselling from './components/AICounselling';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
+import StudentRegistrationNew from './components/StudentRegistrationNew';
 import { AuthProvider, useAuth } from './auth/AuthContext';
+import ProtectedRoute from './auth/ProtectedRoute';
 
 // Create modern theme
 const theme = createTheme({
@@ -83,10 +85,33 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/student-login" element={<StudentLogin />} />
+            
+            {/* Public Routes */}
             <Route path="/register" element={<StudentRegistrationNew />} />
-            <Route path="/predictor" element={<PredictorDashboard />} />
-            <Route path="/results" element={<Results />} />
+            <Route 
+              path="/predictor" 
+              element={<PredictorDashboard />}
+            />
+            <Route 
+              path="/results" 
+              element={<Results />}
+            />
+            <Route 
+              path="/cutoff-analytics" 
+              element={<CutoffAnalytics />}
+            />
+            
+            {/* Protected Admin Routes */}
+            <Route 
+              path="/admin-dashboard" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Public Routes */}
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/branch-guide" element={<BranchGuide />} />

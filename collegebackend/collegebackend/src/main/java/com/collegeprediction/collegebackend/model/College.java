@@ -28,6 +28,12 @@ public class College {
   // Ranking score for sorting
   private double rankingScore;
 
+  // Year of cutoff data
+  private int cutoffYear;
+
+  // CAP round (1, 2, 3, etc.)
+  private int capRound;
+
   public College() {
   }
 
@@ -37,13 +43,15 @@ public class College {
     this.cutoffScore = cutoffScore;
   }
 
-  public College(String name, String city, double cutoffScore, String branch, String collegeType, double rankingScore) {
+  public College(String name, String city, double cutoffScore, String branch, String collegeType, double rankingScore, int cutoffYear, int capRound) {
     this.name = name;
     this.city = city;
     this.cutoffScore = cutoffScore;
     this.branch = branch;
     this.collegeType = collegeType;
     this.rankingScore = rankingScore;
+    this.cutoffYear = cutoffYear;
+    this.capRound = capRound;
   }
 
   public Long getId() {
@@ -100,6 +108,22 @@ public class College {
 
   public void setRankingScore(double rankingScore) {
     this.rankingScore = rankingScore;
+  }
+
+  public int getCutoffYear() {
+    return cutoffYear;
+  }
+
+  public void setCutoffYear(int cutoffYear) {
+    this.cutoffYear = cutoffYear;
+  }
+
+  public int getCapRound() {
+    return capRound;
+  }
+
+  public void setCapRound(int capRound) {
+    this.capRound = capRound;
   }
 
   @Override

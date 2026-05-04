@@ -10,10 +10,10 @@ public class CorsConfig implements WebMvcConfigurer {
 
   @Override
   public void addCorsMappings(@NonNull CorsRegistry registry) {
-    registry.addMapping("/api/**")
-        // allow local dev frontends on common ports (3000/3001/3003) and loopback
+    registry.addMapping("/**")
+        // allow local dev frontends on common ports (3000/3001/3002/3003) and loopback
         .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001",
-            "http://127.0.0.1:3001", "http://localhost:3003", "http://127.0.0.1:3003")
+            "http://127.0.0.1:3001", "http://localhost:3002", "http://127.0.0.1:3002", "http://localhost:3003", "http://127.0.0.1:3003")
         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
         .allowedHeaders("*")
         .allowCredentials(true);
