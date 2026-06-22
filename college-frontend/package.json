@@ -1,6 +1,8 @@
 {
   "name": "college-frontend",
   "version": "0.1.0",
+  "license": "MIT",
+  "author": "Pratibha Chavan",
   "private": true,
   "proxy": "http://localhost:8083",
   "dependencies": {

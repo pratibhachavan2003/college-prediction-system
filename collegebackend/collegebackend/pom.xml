@@ -14,12 +14,20 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>collegebackend</name>
 	<description>Demo project for Spring Boot</description>
-	<url />
+	<url>https://github.com/pratibhachavan2003/college-prediction-system</url>
 	<licenses>
-		<license />
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 	<developers>
-		<developer />
+		<developer>
+			<name>Pratibha Chavan</name>
+			<email>pratibhachavan2003@gmail.com</email>
+			<url>https://github.com/pratibhachavan2003</url>
+		</developer>
 	</developers>
 	<scm>
 		<connection />

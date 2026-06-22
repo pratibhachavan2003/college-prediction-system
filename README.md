@@ -344,6 +344,28 @@ See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for more troubleshooting.
 
 ---
 
+## 📜 License
+
+This project is licensed under the **MIT License**.
+
+See the [LICENSE](LICENSE) file for details.
+
+**You can**:
+- Use commercially
+- Modify the code
+- Distribute copies
+- Use privately
+
+**You must**:
+- Include the license and copyright notice
+
+**You cannot**:
+- Hold the author liable
+
+Copyright (c) 2026 Pratibha Chavan
+
+---
+
 <div align="center">
 
 ## 🎉 Ready to Use!
@@ -359,6 +381,7 @@ All systems are implemented and documented.
 **Implementation Date**: January 16, 2026  
 **Status**: ✅ Production Ready  
 **Version**: 1.0  
+**License**: MIT ✅  
 
 </div>
 
