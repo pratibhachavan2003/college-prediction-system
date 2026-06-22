@@ -346,23 +346,29 @@ See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for more troubleshooting.
 
 ## 📜 License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
 See the [LICENSE](LICENSE) file for details.
 
-**You can**:
-- Use commercially
+### ✅ You can:
+- Use for any purpose
+- Study the source code
 - Modify the code
 - Distribute copies
-- Use privately
+- Create derived works
 
-**You must**:
-- Include the license and copyright notice
+### 🔗 You must:
+- Include the GPL-3.0 license
+- Provide source code with distributions
+- Disclose modifications
+- License derivatives under GPL-3.0
 
-**You cannot**:
+### ❌ You cannot:
 - Hold the author liable
+- Use for proprietary closed-source products (must share source)
 
-Copyright (c) 2026 Pratibha Chavan
+Copyright (c) 2026 Pratibha Chavan  
+Licensed under [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ---
 
