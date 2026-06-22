@@ -1,5 +1,7 @@
 # 📚 College Prediction System - Complete Documentation Index
 
+> **License:** GNU GPL v3.0 — this project is open-source under the GPL-3.0 license. See [LICENSE](LICENSE) for details.
+
 ## 🎯 Start Here
 
 **New to the project?** Start with one of these:
