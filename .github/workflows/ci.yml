@@ -22,7 +22,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: college_db
+          MYSQL_DATABASE: college_prediction_db
         ports:
           - 3306:3306
         options: >-
@@ -50,7 +50,7 @@ jobs:
       - name: Build and test backend
         run: mvn --batch-mode verify
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/college_db
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/college_prediction_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
 
