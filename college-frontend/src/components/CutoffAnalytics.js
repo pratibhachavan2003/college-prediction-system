@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -22,7 +22,6 @@ import {
   Paper,
   TextField,
   Chip,
-  Divider,
   Fade,
 } from '@mui/material';
 import {
@@ -101,55 +100,65 @@ const CutoffAnalytics = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (selectedYear) {
-      fetchCutoffData();
-    }
-  }, [selectedYear, selectedRound, selectedBranch]);
+ useEffect(() => {
+  if (selectedYear) {
+    fetchCutoffData();
+  }
+}, [selectedYear, fetchCutoffData]);
 
-  const fetchCutoffData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      let url = `${API_BASE_URL}/api/cutoff/year/${selectedYear}/round/${selectedRound}`;
-      if (selectedBranch && selectedBranch !== 'All') {
-        url += `?branch=${encodeURIComponent(selectedBranch)}`;
-      }
-      
-      const response = await axios.get(url);
-      if (response.data && response.data.data) {
-        const data = response.data.data;
-        setCutoffData(data);
-        
-        if (data.length === 0) {
-          setStatusSeverity('info');
-          setStatusMessage('No cutoff data available for the selected filters. Try another year or round.');
-          setBranches((prev) => (prev.length > 1 ? prev : ['All']));
-        } else {
-          setStatusMessage('');
-          const uniqueBranches = [...new Set(data.map(item => item.branch))].filter(Boolean);
-          if (uniqueBranches.length > 0) {
-            setBranches(['All', ...uniqueBranches]);
-          }
-        }
-      } else if (Array.isArray(response.data)) {
-        setCutoffData(response.data);
-        if (response.data.length === 0) {
-          setBranches(['All']);
-          setStatusSeverity('info');
-          setStatusMessage('No cutoff data available for the selected filters.');
-        } else {
-          setStatusMessage('');
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching cutoff data:', err);
-      setError('Failed to load cutoff data');
-    } finally {
-      setLoading(false);
+
+const fetchCutoffData = useCallback(async () => {
+  try {
+    setLoading(true);
+    setError('');
+
+    let url = `${API_BASE_URL}/api/cutoff/year/${selectedYear}/round/${selectedRound}`;
+
+    if (selectedBranch && selectedBranch !== 'All') {
+      url += `?branch=${encodeURIComponent(selectedBranch)}`;
     }
-  };
+
+    const response = await axios.get(url);
+
+    if (response.data && response.data.data) {
+      const data = response.data.data;
+      setCutoffData(data);
+
+      if (data.length === 0) {
+        setStatusSeverity('info');
+        setStatusMessage(
+          'No cutoff data available for the selected filters. Try another year or round.'
+        );
+        setBranches((prev) => (prev.length > 1 ? prev : ['All']));
+      } else {
+        setStatusMessage('');
+        const uniqueBranches = [
+          ...new Set(data.map((item) => item.branch)),
+        ].filter(Boolean);
+
+        if (uniqueBranches.length > 0) {
+          setBranches(['All', ...uniqueBranches]);
+        }
+      }
+    } else if (Array.isArray(response.data)) {
+      setCutoffData(response.data);
+
+      if (response.data.length === 0) {
+        setBranches(['All']);
+        setStatusSeverity('info');
+        setStatusMessage('No cutoff data available for the selected filters.');
+      } else {
+        setStatusMessage('');
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching cutoff data:', err);
+    setError('Failed to load cutoff data');
+  } finally {
+    setLoading(false);
+  }
+}, [selectedYear, selectedRound, selectedBranch]);
+
 
   const handleScoreSubmit = async () => {
     if (!studentScore || isNaN(studentScore)) {
