@@ -17,18 +17,7 @@ CREATE TABLE IF NOT EXISTS colleges (
 ALTER TABLE colleges
 MODIFY COLUMN cap_round INT NOT NULL DEFAULT 1;
 
--- Create colleges table
-CREATE TABLE IF NOT EXISTS colleges (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    city VARCHAR(100),
-    cutoff_score DOUBLE,
-    branch VARCHAR(100),
-    college_type VARCHAR(50),
-    ranking_score DOUBLE,
-    cutoff_year INT,
-    cap_round INT DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- Create students table
 CREATE TABLE IF NOT EXISTS students (
