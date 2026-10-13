@@ -79,26 +79,39 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-
   docker-build:
-    name: Build Docker Images
+    name: Build and Publish Docker Images
     runs-on: ubuntu-latest
     needs:
       - backend-build
       - frontend-build
 
+    # Publish only on pushes to main, never on pull requests.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Backend Docker Image
-        run: |
-          docker build \
-            -t college-prediction-backend:ci \
-            ./collegebackend/collegebackend
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build Frontend Docker Image
-        run: |
-          docker build \
-            -t college-prediction-frontend:ci \
-            ./college-frontend
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./collegebackend/collegebackend
+          push: true
+          tags: docker.io/pratibha1807/college-prediction-backend:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./college-frontend
+          push: true
+          tags: docker.io/pratibha1807/college-prediction-frontend:latest
