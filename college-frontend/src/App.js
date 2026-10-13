@@ -17,7 +17,7 @@ import AICounselling from './components/AICounselling';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
 import StudentRegistrationNew from './components/StudentRegistrationNew';
-import { AuthProvider, useAuth } from './auth/AuthContext';
+import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 
 // Create modern theme
