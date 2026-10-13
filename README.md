@@ -2,6 +2,16 @@
 
 > **License:** GNU GPL v3.0 — this project is open-source under the GPL-3.0 license. See [LICENSE](LICENSE) for details.
 
+## Run with Docker
+
+The Docker Compose setup starts the React frontend, Spring Boot API, and MySQL database together. It requires Docker Desktop with Docker Compose.
+
+1. Copy `.env.example` to `.env` (in PowerShell, run `Copy-Item .env.example .env`) and replace both placeholder passwords.
+2. From the repository root, run `docker compose up --build`.
+3. Open [http://localhost:3000](http://localhost:3000).
+
+The frontend proxies `/api` requests to the backend inside the Compose network, and MySQL data is stored in the `mysql-data` volume. Stop the stack with `docker compose down`; use `docker compose down --volumes` only when you also want to delete the database data. The backend image skips Maven tests during image creation; run the project tests separately when needed.
+
 ## 🎯 Start Here
 
 **New to the project?** Start with one of these:
@@ -392,4 +402,3 @@ All systems are implemented and documented.
 **License**: MIT ✅  
 
 </div>
-
