@@ -32,7 +32,8 @@ public class College {
   private int cutoffYear;
 
   // CAP round (1, 2, 3, etc.)
-  private int capRound;
+ @Column(name = "cap_round", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1")
+private int capRound = 1;
 
   public College() {
   }
